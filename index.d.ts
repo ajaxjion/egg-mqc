@@ -70,10 +70,9 @@ export interface ConnectCfg {
   },
 }
 
-
 declare module 'egg' {
   interface Application {
-    amqp: () => Promise<Connection>;
+    amqp(): Promise<Connection>;
   }
 
   interface EggAppConfig {

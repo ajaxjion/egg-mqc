@@ -72,7 +72,15 @@ see [config/config.default.js](config/config.default.js) for more detail.
 
 ## Example
 
-<!-- example here -->
+
+```
+const amqp = await this.app.amqp();
+const queue = 'test';
+const ch = await amqp.createChannel();
+await ch.assertQueue(queue);
+const rst = await ch.sendToQueue(queue, Buffer.from('hello world'));
+await ch.close();
+```
 
 ## Questions & Suggestions
 

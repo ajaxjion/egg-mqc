@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "description": "ampq-plugin",
   "eggPlugin": {
-    "name": "mqc"
+    "name": "egg-mqc"
   },
   "keywords": [
     "egg",
     "eggPlugin",
-    "egg-plugin"
+    "egg-plugin",
+    "amqp",
+    "connection poll"
   ],
   "dependencies": {
     "@types/amqplib": "^0.5.12",
@@ -42,19 +44,20 @@
     "config",
     "agent.js",
     "lib",
-    "app.js"
+    "app.js",
+    "index.d.ts"
   ],
   "ci": {
     "version": "8, 10"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/eggjs/egg-mqc.git"
+    "url": "git+https://github.com/ajaxjion/egg-mqc.git"
   },
   "bugs": {
-    "url": "https://github.com/eggjs/egg/issues"
+    "url": "https://github.com/ajaxjion/egg-mqc/issues"
   },
-  "homepage": "https://github.com/eggjs/egg-mqc#readme",
-  "author": "superMa",
+  "homepage": "https://github.com/ajaxjion/egg-mqc#readme",
+  "author": "adrian82",
   "license": "MIT"
 }
