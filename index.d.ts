@@ -1,8 +1,4 @@
 import { Connection } from 'amqplib';
-
-export * from 'amqplib';
-import { Options } from 'amqplib/properties';
-
 export interface ConnectCfg {
   /**
    * The to be used protocol
@@ -61,12 +57,11 @@ export interface ConnectCfg {
   vhost?: string;
 
   pool?: {
-    opts: {
-      max?: number, // maximum size of the pool
-      min?: number, // minimum size of the pool
-      testOnBorrow?: boolean,
-      [prop:string]: any
-    },
+    max?: number,
+    min?: number,
+    testOnBorrow?: boolean,
+    acquireTimeoutMillis?: number,
+    [prop:string]: any
   },
 }
 

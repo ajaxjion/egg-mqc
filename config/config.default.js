@@ -26,10 +26,8 @@ exports.amqp = {
   //   ca: [caCertAsBuffer],           array of trusted CA certs
   // },
   pool: {
-    opts: {
-      max: 10, // maximum size of the pool
-      min: 2, // minimum size of the pool
-      testOnBorrow: true,
-    },
+    max: 10, // maximum size of the pool
+    min: 2, // minimum size of the pool
+    testOnBorrow: true,
   },
 };
