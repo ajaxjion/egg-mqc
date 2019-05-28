@@ -10,7 +10,7 @@ class HomeController extends Controller {
     await ch.assertQueue(queue);
     const rst = await ch.sendToQueue(queue, Buffer.from('hello world'));
     await ch.close();
-    this.ctx.body = 'hi, ' + this.app.plugins.mqc.name + ', ' + rst;
+    this.ctx.body = 'hi, ' + this.app.plugins['egg-mqc'].name + ', ' + rst;
   }
 }
 

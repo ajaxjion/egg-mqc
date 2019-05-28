@@ -17,7 +17,7 @@ describe('test/mqc.test.js', () => {
   it('should GET /', () => {
     return app.httpRequest()
       .get('/')
-      .expect('hi, mqc, true')
+      .expect('hi, egg-mqc, true')
       .expect(200);
   });
 });
