@@ -80,6 +80,60 @@ const rst = await ch.sendToQueue(queue, Buffer.from('hello world'));
 await ch.close();
 ```
 
+### define AmqpConsumer in file app/lib/amqpconsumer
+```
+import { Connection } from 'amqplib';
+import { Application } from 'egg';
+
+export class AmqpConsumer {
+  private readonly tag: string;
+  private readonly app: Application;
+  private handler: (conn: Connection, tag: string) => {};
+
+  constructor(app: Application, handler, tag?: string) {
+    this.tag = tag && `[${tag}]` || '';
+    this.app = app;
+    this.handler = handler;
+    this.process();
+  }
+
+  public process() {
+    this.app.logger.info(`${this.tag} start consume...`);
+    this.app.amqp().then(conn => {
+      conn.on('close', () => {
+        this.app.logger.info(`${this.tag} consume is closed!!!`);
+        this.process();
+      });
+      return conn;
+    }).then(conn => {
+      this.app.logger.info(`${this.tag} consuming`);
+      this.handler(conn, this.tag);
+    }).catch(() => {
+      this.app.logger.info(`${this.tag} error!`);
+      this.process();
+    });
+  }
+}
+```
+
+in app.ts  serverDidReady()
+```
+import { AmqpConsumer } from './app/lib/amqpconsumer';
+...
+async serverDidReady() {
+    new AmqpConsumer(this.app, (conn, tag) => {
+      conn.createChannel().then((channel => {
+        channel.consume('test', (msg: ConsumeMessage | null) => {
+          if (msg) {
+            let text = msg.content.toString();
+            this.app.logger.info('[' + tag + '] comsume', text);
+            channel.ack(msg);
+          }
+        })
+      }))
+    }, 'con-zero-one');
+}
+```
 ## Questions & Suggestions
 
 Please open an issue [here](https://github.com/eggjs/egg/issues).
