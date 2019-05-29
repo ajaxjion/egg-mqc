@@ -71,13 +71,14 @@ see [config/config.default.js](config/config.default.js) for more detail.
 ## Example
 
 
+* publish message to topic
+
 ```
-const amqp = await this.app.amqp();
-const queue = 'test';
-const ch = await amqp.createChannel();
-await ch.assertQueue(queue);
-const rst = await ch.sendToQueue(queue, Buffer.from('hello world'));
-await ch.close();
+    const amqp = await this.app.amqp();
+    const exchange = 'fund';
+    const ch = await amqp.createChannel();
+    await ch.assertExchange(exchange, 'topic', { durable: true });
+    const rst = await ch.publish(exchange, 'fund.change', Buffer.from('fund.update'), { persistent: true });
 ```
 
 ### define AmqpConsumer in file app/lib/amqpconsumer
@@ -121,17 +122,23 @@ in app.ts  serverDidReady()
 import { AmqpConsumer } from './app/lib/amqpconsumer';
 ...
 async serverDidReady() {
-    new AmqpConsumer(this.app, (conn, tag) => {
-      conn.createChannel().then((channel => {
-        channel.consume('test', (msg: ConsumeMessage | null) => {
-          if (msg) {
-            let text = msg.content.toString();
-            this.app.logger.info('[' + tag + '] comsume', text);
-            channel.ack(msg);
-          }
-        })
-      }))
-    }, 'con-zero-one');
+  new AmqpConsumer(this.app, (conn, tag) => {
+    const exchange = 'fund';
+    const queue = 'fund.change';
+    conn.createChannel().then((channel => {
+      // bind on consume
+      channel.assertExchange(exchange, 'topic', { durable: true });
+      channel.assertQueue(queue, { durable: true});
+      channel.bindQueue(queue, exchange, 'fund.change');
+      channel.consume(queue, (msg: ConsumeMessage | null) => {
+        if (msg) {
+          let text = msg.content.toString();
+          this.app.logger.info('[' + tag + '] consume', text);
+          channel.ack(msg);
+        }
+      })
+    }))
+  }, 'con-hello');
 }
 ```
 ## Questions & Suggestions
