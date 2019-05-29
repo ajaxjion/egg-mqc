@@ -70,20 +70,53 @@ see [config/config.default.js](config/config.default.js) for more detail.
 
 ## Example
 
+* app/extends/application.ts
+
+```
+  /**
+   * publish data to topic 
+   * @param this 
+   * @param topicKey 
+   * @param data 
+   */
+  mqPublish(this: Application, topicKey: string, data: Buffer) {
+    const exchange = 'amq.topic';
+    return this.amqp()
+    .then(conn => conn.createChannel())
+    .then(channel => {
+      const result = channel.publish(exchange, topicKey, data, { persistent: true });
+      channel.close();
+      return result;
+    })
+    .catch(() => false);
+  }
+```
 
 * publish message to topic
 
 ```
-    const amqp = await this.app.amqp();
-    const exchange = 'fund';
-    const ch = await amqp.createChannel();
-    await ch.assertExchange(exchange, 'topic', { durable: true });
-    const rst = await ch.publish(exchange, 'fund.change', Buffer.from('fund.update'), { persistent: true });
+    const rst = await this.app.mqPublish('this_is_your_topic', Buffer.from('hello there'));
+```
+
+* consume in app.ts
+
+```
+  async serverDidReady() {
+    // Server is listening.
+    subscribe(this.app, "#", "fund.queue", (channel: Channel, msg: ConsumeMessage | null) => {
+      if (msg) {
+        let text = msg.content.toString();
+        let { exchange, routingKey } = msg.fields;
+        this.app.logger.info(` - [${exchange}, ${routingKey}] ${text}`);
+        channel.ack(msg);
+      }
+    });
+  }
 ```
 
 ### define AmqpConsumer in file app/lib/amqpconsumer
 ```
-import { Connection } from 'amqplib';
+import { Connection, ConsumeMessage, Channel } from 'amqplib';
 import { Application } from 'egg';
 
 export class AmqpConsumer {
@@ -115,30 +148,34 @@ export class AmqpConsumer {
     });
   }
 }
-```
 
-in app.ts  serverDidReady()
-```
-import { AmqpConsumer } from './app/lib/amqpconsumer';
-...
-async serverDidReady() {
-  new AmqpConsumer(this.app, (conn, tag) => {
-    const exchange = 'fund';
-    const queue = 'fund.change';
+/**
+ * 订阅消息
+ * 使用示例
+ * subscribe(this.app, "#", "fund.queue", (channel: Channel, msg: ConsumeMessage | null) => {
+      if (msg) {
+        let text = msg.content.toString();
+        let { exchange, routingKey } = msg.fields;
+        this.app.logger.info(`[${exchange}, ${routingKey}] ${text}`);
+        channel.ack(msg);
+      }
+    });
+ * @param app 
+ * @param topic 主题名字
+ * @param queue 消息队列名字
+ * @param handler 订阅处理，处理完消息务必调用channel.ack(msg)
+ */
+export function subscribe(app: Application, topic: string, queue: string, handler: (channel: Channel, msg: ConsumeMessage | null) => void) {
+  new AmqpConsumer(app, (conn) => {
+    const exchange = 'amq.topic';
     conn.createChannel().then((channel => {
-      // bind on consume
+      // 消费时，绑定队列到exchange
       channel.assertExchange(exchange, 'topic', { durable: true });
-      channel.assertQueue(queue, { durable: true});
-      channel.bindQueue(queue, exchange, 'fund.change');
-      channel.consume(queue, (msg: ConsumeMessage | null) => {
-        if (msg) {
-          let text = msg.content.toString();
-          this.app.logger.info('[' + tag + '] consume', text);
-          channel.ack(msg);
-        }
-      })
+      channel.assertQueue(queue, { durable: true });
+      channel.bindQueue(queue, exchange, topic);
+      channel.consume(queue, (msg) => handler(channel, msg));
     }))
-  }, 'con-hello');
+  }, topic);
 }
 ```
 ## Questions & Suggestions
