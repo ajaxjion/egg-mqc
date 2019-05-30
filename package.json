@@ -1,9 +1,9 @@
 {
   "name": "egg-mqc",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "ampq-plugin",
   "eggPlugin": {
-    "name": "egg-mqc"
+    "name": "mqc"
   },
   "keywords": [
     "egg",

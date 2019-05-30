@@ -173,7 +173,13 @@ export function subscribe(app: Application, topic: string, queue: string, handle
       channel.assertExchange(exchange, 'topic', { durable: true });
       channel.assertQueue(queue, { durable: true });
       channel.bindQueue(queue, exchange, topic);
-      channel.consume(queue, (msg) => handler(channel, msg));
+      channel.consume(queue, (msg) => {
+        try {
+          handler(channel, msg);
+        } catch (err) {
+          app.logger.error(`consume ${queue} error ${err}`);
+        }
+      });
     }))
   }, topic);
 }
